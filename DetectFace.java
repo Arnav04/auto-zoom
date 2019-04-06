@@ -34,33 +34,53 @@ public class DetectFace {
 	
  
 	public static void main(String[] args) throws Exception {
-		//Initializing OpenCV Cascade Classifier
+		/*
+		 * Initializing Eye Classifier from OpenCV
+		 * Change the path name as needed
+		 */
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		CascadeClassifier cascadeEyeClassifier = new CascadeClassifier("/Users/rohil/OpenCV-Bundle/opencv-4.0.1/data/haarcascades/haarcascade_eye.xml");
 
-		//Initializing Video Capture Device
+		/*
+		 * Initializing Video Capture Device
+		 */
 		VideoCapture videoDevice = new VideoCapture();
 		videoDevice.open(0);
 		
-		//Initializing Eye Box location data
+		/*
+		 * Initializing Eye Rectangle Data
+		 */
 		int rectx = 0;
 		int recty = 0;
 		int rectw = 0;
 		int recth = 0;
 		
-		//Main video loop
+		/*
+		 * Main Video Loop
+		 * Else condition asks if video device is on
+		 */
 		if (videoDevice.isOpened()) {
 			while (true) {
-				//Collecting image from computer camera as a Mat
+				/*
+				 * Collecting image from computer camera
+				 */
 				Mat frameCapture = new Mat();
 				videoDevice.read(frameCapture);
 
-				//Using Cascade Eye Classifier to dump all Eye Boxes into the Mat eyes
+				/*
+				 * Using Cascade Eye Classifier to dump all Eye Boxes into eyes (Mat)
+				 */
 				MatOfRect eyes = new MatOfRect();
 				cascadeEyeClassifier.detectMultiScale(frameCapture, eyes);	
 				
+				/*
+				 * Converting eyes (Mat) to an array for ease of use later in the program
+				 */
 				Rect[] eyesarray = eyes.toArray();
 				
+				/*
+				 * Finding all 
+				 */
 				int len = 0;
 				for (int i = 0; i < eyesarray.length; i++) {
 					if (isValid(eyesarray[i])) {
