@@ -2,6 +2,7 @@ import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -33,7 +34,7 @@ public class DetectFace {
 	static ImageIcon icon;
 	
  
-	public static void main(String[] args) throws Exception {
+	public static void findlefteye() throws Exception {
 		/*
 		 * Initializing Eye Classifier from OpenCV
 		 * Change the path name as needed
@@ -52,8 +53,6 @@ public class DetectFace {
 		 */
 		int rectx = 0;
 		int recty = 0;
-		int rectw = 0;
-		int recth = 0;
 		
 		/*
 		 * Main Video Loop
@@ -79,7 +78,7 @@ public class DetectFace {
 				Rect[] eyesarray = eyes.toArray();
 				
 				/*
-				 * Finding all 
+				 * Finding the number of valid eyes
 				 */
 				int len = 0;
 				for (int i = 0; i < eyesarray.length; i++) {
@@ -88,7 +87,6 @@ public class DetectFace {
 					}
 				}
 				
-				System.out.println(len);
 				
 				Rect[] validrectangles = new Rect[len];
 				
@@ -111,29 +109,43 @@ public class DetectFace {
 				}
 				System.out.println("\n");
 				
+				//Turning feed (Mat) into a Buffered Image
+				BufferedImage currentimage = ConvertMat2Image(frameCapture);
 				
 				if (rectpos.length == 2) {
 					Rect rect = validrectangles[0];
-					Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
+					BufferedImage lefteye = currentimage.getSubimage(rect.x, rect.y, rect.width, rect.height);
+					//Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
 
 					rect = validrectangles[1];
-					Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
+					BufferedImage righteye = currentimage.getSubimage(rect.x, rect.y, rect.width, rect.height);
+					//Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
 				
+					File path = new File("/Users/rohil/Desktop/result/firstcapture.png");
+					ImageIO.write(lefteye, "PNG", path);
+					return;
+					
 				} else if (rectpos.length > 2) {
 					int firsteyeindex = findMinDiffPairs(rectpos, rectpos.length);
 					
 					System.out.println(firsteyeindex);
 					
 					Rect rect = validrectangles[firsteyeindex];
-					Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
+					BufferedImage lefteye = currentimage.getSubimage(rect.x, rect.y, rect.width, rect.height);
+					//Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
 
 					rect = validrectangles[firsteyeindex+1];
-					Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
+					BufferedImage righteye = currentimage.getSubimage(rect.x, rect.y, rect.width, rect.height);
+					//Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
+				
+					File path = new File("/Users/rohil/Desktop/result/firstcapture.png");
+					ImageIO.write(lefteye, "PNG", path);
+					return;
+
 				}
 				
 				
-				//Turning feed (Mat) into a Buffered Image
-				BufferedImage currentimage = ConvertMat2Image(frameCapture);
+
 				
 				//Find box and center
 				org.opencv.core.Point box = new org.opencv.core.Point(rectx, recty);
@@ -152,6 +164,8 @@ public class DetectFace {
 		} else {
 			System.out.println("Video device on? Check your hardware.");
 		}
+		
+		return;
 	}
 	
 	
