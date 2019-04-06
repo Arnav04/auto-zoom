@@ -11,6 +11,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
 import java.util.Arrays;
+import java.awt.Robot;
 
 /* CREDIT TO:
  * Contact Info:
@@ -47,10 +48,6 @@ public class DetectFace {
 		int rectw = 0;
 		int recth = 0;
 		
-		//Initalizing Pupil Finder/Mouse Mover
-		findPupil fp = new findPupil();
-		mouseMover mm = new mouseMover();
-		
 		//Main video loop
 		if (videoDevice.isOpened()) {
 			while (true) {
@@ -62,18 +59,29 @@ public class DetectFace {
 				MatOfRect eyes = new MatOfRect();
 				cascadeEyeClassifier.detectMultiScale(frameCapture, eyes);	
 				
+				//Initializing array of all possible eyes
 				Rect[] eyesarray = eyes.toArray();
+				
+				//Initializing integer array with size of eyes array
 				int[] rectpos = new int[eyesarray.length];
+				
+				
+				
+				//Looping through all of eyes array to assign values to the rectpos array
 				for (int i = 0; i < eyesarray.length; i++) {
+					//Using an algorithm to numerically represent an x-y position (stored in rectpos array)
 					rectpos[i] = eyesarray[i].x + ((eyesarray[i].y-1)*1080);
 				}
 				
+				
 				if (rectpos.length > 1) {
+					//Finding the closest two eyes and assigning its index to the integer firsteye
 					int firsteye = Arrays.binarySearch(rectpos, findMinDiffPairs(rectpos, rectpos.length));
 
-					//Looping through all Eye Boxes as a rect
+					//Looping through index firsteye and the next index to get the index of the two eyes
 					for (int i = firsteye; i <= firsteye + 1; i++) {
 						
+						//Rect = eye i
 						Rect rect = eyesarray[i];
 						
 						//Simple filtering system to ignore garbage boxes
@@ -92,7 +100,6 @@ public class DetectFace {
 							recth = rect.height;
 	
 						}
-	
 					}
 				}
 				
@@ -101,13 +108,12 @@ public class DetectFace {
 				
 				//Find box and center
 				org.opencv.core.Point box = new org.opencv.core.Point(rectx, recty);
-				org.opencv.core.Point pupil = fp.findcenter(currentimage, rectx, recty, rectw, recth);
 				
 				System.out.println(box);
 				System.out.println(pupil);
 				
-				//mm.moveMouse(rectx, recty+44);
-				//Thread.sleep(3000);
+				moveMouse(rectx, recty+44);
+				Thread.sleep(3000);
 				
 				//Push current image to Screen
 				PushImage(currentimage);
@@ -183,4 +189,9 @@ public class DetectFace {
 	    }
 	    return 0;
 	  }
+	
+    public static void moveMouse(int x, int y) throws Exception {
+    	Robot robot = new Robot();
+    	robot.mouseMove(x, y);
+    }
 }
