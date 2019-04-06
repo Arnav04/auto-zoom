@@ -54,54 +54,63 @@ public class DetectFace {
 				//Collecting image from computer camera as a Mat
 				Mat frameCapture = new Mat();
 				videoDevice.read(frameCapture);
-				
+
 				//Using Cascade Eye Classifier to dump all Eye Boxes into the Mat eyes
 				MatOfRect eyes = new MatOfRect();
 				cascadeEyeClassifier.detectMultiScale(frameCapture, eyes);	
 				
-				//Initializing array of all possible eyes
 				Rect[] eyesarray = eyes.toArray();
 				
-				//Initializing integer array with size of eyes array
-				int[] rectpos = new int[eyesarray.length];
-				
-				
-				
-				//Looping through all of eyes array to assign values to the rectpos array
+				int len = 0;
 				for (int i = 0; i < eyesarray.length; i++) {
-					//Using an algorithm to numerically represent an x-y position (stored in rectpos array)
-					rectpos[i] = eyesarray[i].x + ((eyesarray[i].y-1)*1080);
-				}
-				
-				
-				if (rectpos.length > 1) {
-					//Finding the closest two eyes and assigning its index to the integer firsteye
-					int firsteye = Arrays.binarySearch(rectpos, findMinDiffPairs(rectpos, rectpos.length));
-
-					//Looping through index firsteye and the next index to get the index of the two eyes
-					for (int i = firsteye; i <= firsteye + 1; i++) {
-						
-						//Rect = eye i
-						Rect rect = eyesarray[i];
-						
-						//Simple filtering system to ignore garbage boxes
-						if (rect.width < 100 
-						 && rect.height < 100
-						 && rect.width > 50
-						 && rect.height > 50) {
-	
-							//Uncomment to show blue rectangles around eyes in pushed image
-							Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
-							
-							//Assigning rectangle location data to previously initialized variables
-							rectx = rect.x;
-							recty = rect.y;
-							rectw = rect.width;
-							recth = rect.height;
-	
-						}
+					if (isValid(eyesarray[i])) {
+						len++;
 					}
 				}
+				
+				System.out.println(len);
+				
+				Rect[] validrectangles = new Rect[len];
+				
+				int j = 0;
+				for (int i = 0; i < eyesarray.length; i++) {
+					if (isValid(eyesarray[i])) {
+						validrectangles[j] = eyesarray[i];
+						System.out.println(validrectangles[j]);
+						j++;
+					}
+				}
+				
+				System.out.println("mid");
+				
+				
+				int[] rectpos = new int[len];
+				for (int i = 0; i < validrectangles.length; i++) {
+					rectpos[i] = validrectangles[i].x + ((validrectangles[i].y-1)*1080);
+					System.out.println(rectpos[i]);
+				}
+				System.out.println("\n");
+				
+				
+				if (rectpos.length == 2) {
+					Rect rect = validrectangles[0];
+					Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
+
+					rect = validrectangles[1];
+					Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
+				
+				} else if (rectpos.length > 2) {
+					int firsteyeindex = findMinDiffPairs(rectpos, rectpos.length);
+					
+					System.out.println(firsteyeindex);
+					
+					Rect rect = validrectangles[firsteyeindex];
+					Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
+
+					rect = validrectangles[firsteyeindex+1];
+					Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
+				}
+				
 				
 				//Turning feed (Mat) into a Buffered Image
 				BufferedImage currentimage = ConvertMat2Image(frameCapture);
@@ -109,11 +118,10 @@ public class DetectFace {
 				//Find box and center
 				org.opencv.core.Point box = new org.opencv.core.Point(rectx, recty);
 				
-				System.out.println(box);
-				System.out.println(pupil);
+				//System.out.println(box);
 				
-				moveMouse(rectx, recty+44);
-				Thread.sleep(3000);
+				//moveMouse(rectx, recty+44);
+				//Thread.sleep(3000);
 				
 				//Push current image to Screen
 				PushImage(currentimage);
@@ -169,29 +177,45 @@ public class DetectFace {
 	}
 	
 	public static int findMinDiffPairs(int[] arr, int n) {
-		// Sort array elements 
-	    Arrays.sort(arr); 
-	      
-	    // Compare differences of adjacent 
-	    // pairs to find the minimum difference. 
-	    int minDiff = arr[1] - arr[0]; 
-	    for (int i = 2; i < n; i++) {
-	    	minDiff = Math.min(minDiff, arr[i] - arr[i-1]); 
+	    
+		int[] original = new int[n];
+	    for (int i = 0; i < arr.length; i++) {
+	    	original[i] = arr[i];
 	    }
-	       
-	    // Traverse array again and print all pairs 
-	    // with difference as minDiff. 
-	    for ( int i = 1; i < n; i++) { 
-	        if ((arr[i] - arr[i-1]) == minDiff) 
-	        { 
-	           return arr[i-1];
-	        }
-	    }
-	    return 0;
-	  }
+
+        // Sort array elements 
+        Arrays.sort(arr); 
+
+        // Compare differences of adjacent 
+        // pairs to find the minimum difference. 
+        int minDiff = arr[1] - arr[0]; 
+        for (int i = 2; i < n; i++) 
+        minDiff = Math.min(minDiff, arr[i] - arr[i-1]); 
+
+        // Traverse array again and print all pairs 
+        // with difference as minDiff. 
+        for (int i = 1; i < n; i++) {
+            if ((arr[i] - arr[i-1]) == minDiff) {
+            	int result = Arrays.binarySearch(original, arr[i-1]);
+            	
+            	if (result >= 0) {
+            		return result;
+            	} else {
+            		return 0;
+            	}
+            }
+        }
+        return 0;
+	}
+	
+	
 	
     public static void moveMouse(int x, int y) throws Exception {
     	Robot robot = new Robot();
     	robot.mouseMove(x, y);
+    }
+    
+    public static boolean isValid(Rect rect) {
+    	return rect.width < 100 && rect.width > 50 && rect.height < 100 && rect.height > 50;
     }
 }
