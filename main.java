@@ -12,24 +12,38 @@ public class Main {
 		mouseMover mouseMover = new mouseMover();
 		mouseMover.moveMouse(720, 450);
 		
-		mouseMover.zoom();
-		detectface.findlefteye();
+		System.out.println("BEGINNING\nBEGINNING\nBEGINNING");
+		//mouseMover.zoom();
+		detectface.findeye();
 		Point home = detectpupil.pupil();
-		System.out.println(home.x);
-		System.out.println("MOVE\nMOVEMOVE\nMOVEMOVEMOVE\nMOVEMOVEMOVEMOVE\nMOVEMOVEMOVEMOVEMOVE");
-		Thread.sleep(2000);
+		//System.out.println(home.x);
+		
+		System.out.println("TOP LEFT\nTOP LEFT\nTOP LEFT");
+		detectface.findeye();
+		int left = detectpupil.pupil().x;
+		
+		System.out.println("TOP RIGHT\nTOP RIGHT\nTOP RIGHT\n");
+		detectface.findeye();
+		int right = detectpupil.pupil().x;
+		
+		double xfactor = 1440/(double) (left-right);
+		System.out.println(left);
+		System.out.println(right);
+		System.out.println(xfactor);
+		System.out.println("MOVE\nMOVE\nMOVE");
+		
 		
 		while (true) {
-			detectface.findlefteye();
+			detectface.findeye();
 			Point pupil = detectpupil.pupil();
 			System.out.println(pupil.x);
 			
-			int differenceX = (home.x-pupil.x)*72;
-			int differenceY = (home.y-pupil.y)*-36;
+			int differenceX = (home.x-pupil.x)* (int) xfactor;
+			int differenceY = (home.y-pupil.y)*36;
 			
 			System.out.println(differenceX);
 			
-			mouseMover.moveMouse(720+differenceX, 450+differenceY);
+			mouseMover.moveMouse(720+differenceX, 450);
 			
 			//home.x+differenceX
 			//home.y-differenceY
