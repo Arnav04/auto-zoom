@@ -25,11 +25,11 @@ public class Main {
 			System.out.println(pupil.x);
 			
 			int differenceX = (home.x-pupil.x)*72;
-			int differenceY = (home.y-pupil.y)*36;
+			int differenceY = (home.y-pupil.y)*-36;
 			
 			System.out.println(differenceX);
 			
-			mouseMover.moveMouse(720+differenceX, 450);
+			mouseMover.moveMouse(720+differenceX, 450+differenceY);
 			
 			//home.x+differenceX
 			//home.y-differenceY
