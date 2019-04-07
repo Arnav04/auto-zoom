@@ -8,33 +8,18 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
 import java.util.Arrays;
-import java.awt.Robot;
 
-/* CREDIT TO:
- * Contact Info:
- * mesutpiskin.com
- * mesutpiskin@outlook.com
- * 
- * See Also:
- * http://mesutpiskin.com/blog/opencv-ile-gui-uygulamalar.html
- * http://mesutpiskin.com/blog/opencv-matris-uzerinde-cizim-islemleri.html
- * http://mesutpiskin.com/blog/321.html
- * 
- * OpenCV version 4.0.1
-*/
-
-public class DetectFace {
+public class faceDetect {
  
 	static JFrame frame;
 	static JLabel label;
 	static ImageIcon icon;
 	
  
-	public static void findlefteye() throws Exception {
+	public Rect findlefteye() throws Exception {
 		/*
 		 * Initializing Eye Classifier from OpenCV
 		 * Change the path name as needed
@@ -87,31 +72,48 @@ public class DetectFace {
 					}
 				}
 				
+//				System.out.println(len);
 				
+				/*
+				 * Initializing validrectangle array
+				 */
 				Rect[] validrectangles = new Rect[len];
 				
+				/*
+				 * Dropping all valid rectangles from eyesarray to validrectangles
+				 */
 				int j = 0;
 				for (int i = 0; i < eyesarray.length; i++) {
 					if (isValid(eyesarray[i])) {
 						validrectangles[j] = eyesarray[i];
-						System.out.println(validrectangles[j]);
+						//System.out.println(validrectangles[j]);
 						j++;
 					}
-				}
+				}		
 				
-				System.out.println("mid");
-				
-				
+				/*
+				 * Initializing rectangle position array
+				 */
 				int[] rectpos = new int[len];
+				
+				/*
+				 * Converting all x-y positions to singular points (see notes)
+				 */
 				for (int i = 0; i < validrectangles.length; i++) {
 					rectpos[i] = validrectangles[i].x + ((validrectangles[i].y-1)*1080);
-					System.out.println(rectpos[i]);
+					//System.out.println(rectpos[i]);
 				}
-				System.out.println("\n");
 				
-				//Turning feed (Mat) into a Buffered Image
+				/*
+				 * Turning feed (Mat) into a Buffered Image
+				 */
 				BufferedImage currentimage = ConvertMat2Image(frameCapture);
 				
+				/*
+				 * Checking if there are two "eyes" (may or may not be actual eyes)
+				 * If there are two eyes, assign both of them to BufferedImage and write to desktop
+				 * If not, find the two eyes closest to each other
+				 */
 				if (rectpos.length == 2) {
 					Rect rect = validrectangles[0];
 					BufferedImage lefteye = currentimage.getSubimage(rect.x, rect.y, rect.width, rect.height);
@@ -122,13 +124,19 @@ public class DetectFace {
 					//Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
 				
 					File path = new File("/Users/rohil/Desktop/result/firstcapture.png");
-					ImageIO.write(lefteye, "PNG", path);
-					return;
+					//System.out.println("{" + rect.x + ", " + rect.y + "}");
+					
+					if (validrectangles[0].x < validrectangles[1].x) {
+						ImageIO.write(lefteye, "PNG", path);
+					} else {
+						ImageIO.write(righteye, "PNG", path);
+					}
+					return rect;
 					
 				} else if (rectpos.length > 2) {
 					int firsteyeindex = findMinDiffPairs(rectpos, rectpos.length);
 					
-					System.out.println(firsteyeindex);
+					//System.out.println(firsteyeindex);
 					
 					Rect rect = validrectangles[firsteyeindex];
 					BufferedImage lefteye = currentimage.getSubimage(rect.x, rect.y, rect.width, rect.height);
@@ -139,36 +147,32 @@ public class DetectFace {
 					//Imgproc.rectangle(frameCapture, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),new Scalar(200, 200, 100),2);
 				
 					File path = new File("/Users/rohil/Desktop/result/firstcapture.png");
-					ImageIO.write(lefteye, "PNG", path);
-					return;
-
+					//System.out.println("{" + rect.x + ", " + rect.y + "}");
+					
+					if (validrectangles[firsteyeindex].x < validrectangles[firsteyeindex+1].x) {
+						ImageIO.write(lefteye, "PNG", path);
+					} else {
+						ImageIO.write(righteye, "PNG", path);
+					}
+					
+					return rect;
 				}
 				
 				
-
-				
-				//Find box and center
-				org.opencv.core.Point box = new org.opencv.core.Point(rectx, recty);
-				
-				//System.out.println(box);
-				
-				//moveMouse(rectx, recty+44);
-				//Thread.sleep(3000);
-				
-				//Push current image to Screen
-				PushImage(currentimage);
-				
-				//System.out.println(String.format("%s eyes detected.",eyes.toArray().length));
-			}
-			
+				/*
+				 * Push current image to screen
+				 */
+				//PushImage(currentimage);
+			}	
 		} else {
 			System.out.println("Video device on? Check your hardware.");
 		}
-		
-		return;
+		return null;
 	}
 	
-	
+	/*
+	 * Converts Mat image to Image
+	 */
 	private static BufferedImage ConvertMat2Image(Mat cameradata) {
 		MatOfByte byteMatData = new MatOfByte();
 		Imgcodecs.imencode(".jpg", cameradata, byteMatData);
@@ -186,7 +190,9 @@ public class DetectFace {
 		return image;
 	}
   	
-	
+	/*
+	 * Creating Window
+	 */
 	public static void WindowReady() {
 		frame = new JFrame();
 		frame.setLayout(new FlowLayout());
@@ -195,7 +201,9 @@ public class DetectFace {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
-	
+	/*
+	 * Pushing Image to screen
+	 */
 	public static void PushImage(Image img2) {
 		if (frame == null)
 			WindowReady();
@@ -210,6 +218,9 @@ public class DetectFace {
 		
 	}
 	
+	/*
+	 * Finding minimum difference pairs given integer array
+	 */
 	public static int findMinDiffPairs(int[] arr, int n) {
 	    
 		int[] original = new int[n];
@@ -242,13 +253,9 @@ public class DetectFace {
         return 0;
 	}
 	
-	
-	
-    public static void moveMouse(int x, int y) throws Exception {
-    	Robot robot = new Robot();
-    	robot.mouseMove(x, y);
-    }
-    
+    /*
+     * Checks if rectangle is a valid size
+     */
     public static boolean isValid(Rect rect) {
     	return rect.width < 100 && rect.width > 50 && rect.height < 100 && rect.height > 50;
     }
